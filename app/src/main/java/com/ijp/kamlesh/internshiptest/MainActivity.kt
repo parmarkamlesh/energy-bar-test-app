@@ -16,23 +16,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Info.")
-        builder.setMessage("InProgress\n 1. Delete Operation")
-        builder.setIcon(android.R.drawable.btn_star)
-
-        builder.setPositiveButton("close :)"){dialogInterface, which ->
-            dialogInterface.dismiss()
-        }
-        builder.setNegativeButton("Close"){dialogInterface, which ->
-            dialogInterface.dismiss()
-        }
-
-        val alertDialog: AlertDialog = builder.create()
-        alertDialog.setCancelable(true)
-//        alertDialog.show()
-
         val data = mutableListOf<ItemsViewModel>()
         data.add(ItemsViewModel(1,100,Color.rgb(255,0,0)))
 

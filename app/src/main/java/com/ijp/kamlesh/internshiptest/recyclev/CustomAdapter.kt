@@ -33,8 +33,9 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
         val ItemsViewModel = mList[dynaPos]
 
         holder.startValueButton.text="${ItemsViewModel.start}"
-        holder.endValueButton.text="${ItemsViewModel.end}"
         holder.startValueButton.setBackgroundColor(ItemsViewModel.color)
+
+        holder.endValueButton.text="${ItemsViewModel.end}"
         holder.endValueButton.setBackgroundColor(ItemsViewModel.color)
 
         holder.seekbar.min=ItemsViewModel.start
@@ -46,11 +47,18 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
             holder.startValueButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
             holder.endValueButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
         }
+        //Clean if already set
+        hideTrashIconFromButtons()
         holder.seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
 
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                     // Show right delete button only when user reach start value or seekbar
-                    if(progress==ItemsViewModel.start)
+                    // Special icon for 1st bar to clear all bars
+                    if(progress==1 && holder.adapterPosition==0){
+                        holder.startValueButton.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_input_delete,0,0,0)
+                        holder.endValueButton.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_input_delete,0,0,0)
+
+                    }else if(progress==ItemsViewModel.start)
                         holder.endValueButton.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_delete,0,0,0)
                     else{
                         //Any better way?
@@ -66,22 +74,41 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
 
                 override fun onStopTrackingTouch(seekBar: SeekBar) {
 
-                    fun updateStartEndButton(){
-                        holder.startValueButton.text=seekBar.progress.toString()
-                    }
                     val actualpos=holder.adapterPosition
 
                     // Case 1: First bar clean => remove all bars except 1st
                     if(seekBar.progress==1 && actualpos==0){
                         mList.clear()
                         mList.add(ItemsViewModel(1,100, Color.rgb(255,0,0)))
+                        hideTrashIconFromButtons()
                         notifyDataSetChanged()
                         itemchangeListenerCustom?.itemChanged()
-                        hideTrashIconFromButtons()
+
                         return
 
                     }
 
+                    //Case 2: Delete any other bar except 1st..
+                    val bugkiller=( seekBar.progress==ItemsViewModel.start || seekBar.progress==ItemsViewModel.start-1)
+
+                    if(bugkiller && mList.size>1){
+
+                        val previousBar=mList[actualpos-1]
+
+                        mList.set(actualpos-1,ItemsViewModel(previousBar.start,ItemsViewModel.end,previousBar.color))
+                        mList.removeAt(actualpos)
+
+                        notifyDataSetChanged()
+
+                        holder.startValueButton.text=seekBar.progress.toString()
+                        itemchangeListenerCustom?.itemChanged()
+                        //deleted bar's end value should be end value of previous bar
+                        // 0 24
+                        // 25 50 < delete this, new prev bar value will be 0 to 50
+                        // 51 100
+                        hideTrashIconFromButtons()
+                        return
+                    }
                     //Case 3: Dont allow segment below or qual 2
                     if(2>(ItemsViewModel.end - seekBar.progress)){
                         Toast.makeText(context,"Minimum Segment length is 2!",Toast.LENGTH_SHORT).show()
@@ -93,23 +120,7 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
 
                         holder.endValueButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
                         holder.endValueButton.text=ItemsViewModel.end.toString()
-
-                        return
-                    }
-
-                    //Case 2: Delete any other bar except 1st..
-                    if(seekBar.progress==ItemsViewModel.start && mList.size>1){
-                        var previousBar=mList[actualpos-1]
-                        mList.set(actualpos-1,ItemsViewModel(previousBar.start,ItemsViewModel.end,previousBar.color))
-                        mList.removeAt(actualpos)
-                        notifyDataSetChanged()
-                        updateStartEndButton()
-                        itemchangeListenerCustom?.itemChanged()
-                        //deleted bar's end value should be end value of previous bar
-                        // 0 24
-                        // 25 50 < delete this, new prev bar value will be 0 to 50
-                        // 51 100
-                        hideTrashIconFromButtons()
+                        holder.seekbar.progress=ItemsViewModel.end
                         return
                     }
                     seekBar.progress.also { seekBar.max = it }
@@ -122,7 +133,7 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
                     }
 
                     mList.add(dynaPos+1,ItemsViewModel(seekBar.progress+1,nextMin,getRandomColor()))
-                    updateStartEndButton()
+                    holder.startValueButton.text=seekBar.progress.toString()
                     holder.endValueButton.text=seekBar.max.toString()
 
                     notifyDataSetChanged()
