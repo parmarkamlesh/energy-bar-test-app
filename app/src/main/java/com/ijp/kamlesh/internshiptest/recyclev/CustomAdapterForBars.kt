@@ -23,14 +23,15 @@ class CustomAdapterForBars(private val mList: MutableList<ItemsViewModel>) : Rec
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
         val dynaPos=holder.adapterPosition
-//        val perc=mList[dynaPos].end*.01
-        val param:LinearLayout.LayoutParams= LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            ((0..100).random()*.01).toFloat()
-        )
+        //Counting weight like 65=> .65
+        val perc=mList[dynaPos].end*.01
+
         holder.singleBar.setBackgroundColor(mList[dynaPos].color)
-        holder.singleBar.layoutParams=param
+
+        val params1 = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT)
+        params1.weight = perc.toFloat()
+
+        holder.singleBar.layoutParams=params1
 
 
     }

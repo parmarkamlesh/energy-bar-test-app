@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
 
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Info.")
-        builder.setMessage("InProgress\n 1. Delete Operation\n 2. bar width")
+        builder.setMessage("InProgress\n 1. Delete Operation")
         builder.setIcon(android.R.drawable.btn_star)
 
         builder.setPositiveButton("close :)"){dialogInterface, which ->
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
         val alertDialog: AlertDialog = builder.create()
         alertDialog.setCancelable(true)
-        alertDialog.show()
+//        alertDialog.show()
 
         val data = mutableListOf<ItemsViewModel>()
         data.add(ItemsViewModel(1,100,Color.rgb(255,0,0)))
@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-        })
+        },this)
 
         seekbarRecView.layoutManager = LinearLayoutManager(this)
         seekbarRecView.adapter = adapter

@@ -5,10 +5,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:weightSum="1"
     android:layout_marginTop="3dp"
-    android:id="@+id/singleBarParent">
+    >
     <LinearLayout
         android:orientation="vertical"
         android:id="@+id/singleBar"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
+        android:layout_weight="1"
         android:layout_height="match_parent"/>
 </LinearLayout>
