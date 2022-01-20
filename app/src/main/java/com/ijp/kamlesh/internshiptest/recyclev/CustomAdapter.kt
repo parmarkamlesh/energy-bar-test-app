@@ -14,13 +14,14 @@ import com.ijp.kamlesh.internshiptest.R
 import com.ijp.kamlesh.internshiptest.utils.Companion.getRandomColor
 import kotlinx.android.synthetic.main.seekbar_component.view.*
 
-class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val listner:ItemchangeListenerCustom,private val context: Context) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
-    private var itemchangeListenerCustom: ItemchangeListenerCustom? = null
-    interface ItemchangeListenerCustom{
+class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val listener:ItemChangeListenerCustom,private val context: Context) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+    private var itemChangeListenerCustom: ItemChangeListenerCustom? = null
+    interface ItemChangeListenerCustom{
         fun itemChanged()
     }
     init{
-        itemchangeListenerCustom=listner
+
+        itemChangeListenerCustom=listener
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -30,18 +31,18 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val dynaPos=holder.adapterPosition
-        val ItemsViewModel = mList[dynaPos]
+        val currentBar = mList[dynaPos]
 
-        holder.startValueButton.text="${ItemsViewModel.start}"
-        holder.startValueButton.setBackgroundColor(ItemsViewModel.color)
+        holder.startValueButton.text="${currentBar.start}"
+        holder.startValueButton.setBackgroundColor(currentBar.color)
 
-        holder.endValueButton.text="${ItemsViewModel.end}"
-        holder.endValueButton.setBackgroundColor(ItemsViewModel.color)
+        holder.endValueButton.text="${currentBar.end}"
+        holder.endValueButton.setBackgroundColor(currentBar.color)
 
-        holder.seekbar.min=ItemsViewModel.start
-        holder.seekbar.max=ItemsViewModel.end
+        holder.seekbar.min=currentBar.start
+        holder.seekbar.max=currentBar.end
 
-        holder.seekbar.progress=ItemsViewModel.end
+        holder.seekbar.progress=currentBar.end
         //
         fun hideTrashIconFromButtons(){
             holder.startValueButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
@@ -52,13 +53,13 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
         holder.seekbar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener{
 
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                    // Show right delete button only when user reach start value or seekbar
+                    // Show right delete button only when user reach start value of first seekbar
                     // Special icon for 1st bar to clear all bars
                     if(progress==1 && holder.adapterPosition==0){
                         holder.startValueButton.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_input_delete,0,0,0)
                         holder.endValueButton.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_input_delete,0,0,0)
 
-                    }else if(progress==ItemsViewModel.start)
+                    }else if(progress==currentBar.start)
                         holder.endValueButton.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_menu_delete,0,0,0)
                     else{
                         //Any better way?
@@ -78,30 +79,32 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
 
                     // Case 1: First bar clean => remove all bars except 1st
                     if(seekBar.progress==1 && actualpos==0){
+
                         mList.clear()
                         mList.add(ItemsViewModel(1,100, Color.rgb(255,0,0)))
+
                         hideTrashIconFromButtons()
+
                         notifyDataSetChanged()
-                        itemchangeListenerCustom?.itemChanged()
+                        itemChangeListenerCustom?.itemChanged()
 
                         return
-
                     }
 
                     //Case 2: Delete any other bar except 1st..
-                    val bugkiller=( seekBar.progress==ItemsViewModel.start || seekBar.progress==ItemsViewModel.start-1)
+                    val leftDragDeleteCondition=( seekBar.progress==currentBar.start || seekBar.progress==currentBar.start-1)
 
-                    if(bugkiller && mList.size>1){
+                    if(leftDragDeleteCondition && mList.size>1){
 
                         val previousBar=mList[actualpos-1]
 
-                        mList.set(actualpos-1,ItemsViewModel(previousBar.start,ItemsViewModel.end,previousBar.color))
+                        mList.set(actualpos-1,ItemsViewModel(previousBar.start,currentBar.end,previousBar.color))
                         mList.removeAt(actualpos)
 
                         notifyDataSetChanged()
 
                         holder.startValueButton.text=seekBar.progress.toString()
-                        itemchangeListenerCustom?.itemChanged()
+                        itemChangeListenerCustom?.itemChanged()
                         //deleted bar's end value should be end value of previous bar
                         // 0 24
                         // 25 50 < delete this, new prev bar value will be 0 to 50
@@ -110,21 +113,21 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
                         return
                     }
                     //Case 3: Dont allow segment below or qual 2
-                    if(2>(ItemsViewModel.end - seekBar.progress)){
+                    if(2>(currentBar.end - seekBar.progress)){
                         Toast.makeText(context,"Minimum Segment length is 2!",Toast.LENGTH_SHORT).show()
 
                         //Reset all button to old value..
 
                         holder.startValueButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
-                        holder.startValueButton.text=ItemsViewModel.start.toString()
+                        holder.startValueButton.text=currentBar.start.toString()
 
                         holder.endValueButton.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0)
-                        holder.endValueButton.text=ItemsViewModel.end.toString()
-                        holder.seekbar.progress=ItemsViewModel.end
+                        holder.endValueButton.text=currentBar.end.toString()
+                        holder.seekbar.progress=currentBar.end
                         return
                     }
                     seekBar.progress.also { seekBar.max = it }
-                    mList[dynaPos] = ItemsViewModel(ItemsViewModel.start,seekBar.progress,ItemsViewModel.color)
+                    mList[dynaPos] = ItemsViewModel(currentBar.start,seekBar.progress,currentBar.color)
 
                     val nextMin=if(mList.size>dynaPos+1){
                         mList[dynaPos+1].start-1
@@ -137,7 +140,7 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>,private val l
                     holder.endValueButton.text=seekBar.max.toString()
 
                     notifyDataSetChanged()
-                    itemchangeListenerCustom?.itemChanged()
+                    itemChangeListenerCustom?.itemChanged()
                     hideTrashIconFromButtons()
                 }
 

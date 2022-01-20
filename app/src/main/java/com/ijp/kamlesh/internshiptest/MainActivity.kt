@@ -23,9 +23,9 @@ class MainActivity : AppCompatActivity() {
         barPreviewRecView.layoutManager = LinearLayoutManager(this)
         barPreviewRecView.adapter=barAdapter
 
-        val adapter = CustomAdapter(data,object :CustomAdapter.ItemchangeListenerCustom{
+        val adapter = CustomAdapter(data,object :CustomAdapter.ItemChangeListenerCustom{
             override fun itemChanged() {
-
+                //Notify to updates  battery bars
                 barAdapter.notifyDataSetChanged()
 
             }
